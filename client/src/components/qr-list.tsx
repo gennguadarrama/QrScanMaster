@@ -1,11 +1,14 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Link } from "wouter";
 import QRCode from "qrcode";
 import { useEffect, useRef } from "react";
 import { QRCode as QRCodeType } from "@shared/schema";
 import { Button } from "@/components/ui/button";
-import { BarChart3, ExternalLink } from "lucide-react";
+import { BarChart3, ExternalLink, GripHorizontal } from "lucide-react";
+import { DndContext, DragEndEvent, useSensor, useSensors, PointerSensor } from '@dnd-kit/core';
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 
 interface QRListProps {
   folderId?: number;
@@ -15,6 +18,45 @@ export default function QRList({ folderId }: QRListProps) {
   const { data: qrCodes } = useQuery<QRCodeType[]>({
     queryKey: ["/api/qrcodes"],
   });
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    })
+  );
+
+  const { toast } = useToast();
+
+  const updateFolderMutation = useMutation({
+    mutationFn: async ({ qrId, newFolderId }: { qrId: number; newFolderId: number | null }) => {
+      const res = await apiRequest("PATCH", `/api/qrcodes/${qrId}`, { folderId: newFolderId });
+      return await res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/qrcodes"] });
+      toast({ title: "QR movido exitosamente" });
+    },
+    onError: (error) => {
+      toast({ 
+        title: "Error al mover el QR", 
+        description: error.message,
+        variant: "destructive" 
+      });
+    },
+  });
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (over && active.id !== over.id) {
+      const qrId = Number(active.id);
+      const newFolderId = over.id === 'root' ? null : Number(over.id);
+
+      updateFolderMutation.mutate({ qrId, newFolderId });
+    }
+  };
 
   const filteredQRCodes = folderId
     ? qrCodes?.filter((qr) => qr.folderId === folderId)
@@ -29,11 +71,13 @@ export default function QRList({ folderId }: QRListProps) {
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-      {filteredQRCodes.map((qr) => (
-        <QRCodeCard key={qr.id} qrCode={qr} />
-      ))}
-    </div>
+    <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        {filteredQRCodes.map((qr) => (
+          <QRCodeCard key={qr.id} qrCode={qr} />
+        ))}
+      </div>
+    </DndContext>
   );
 }
 
@@ -86,9 +130,14 @@ function QRCodeCard({ qrCode }: { qrCode: QRCodeType }) {
   }, [qrCode]);
 
   return (
-    <Card className="group hover:shadow-lg transition-all duration-300 border-primary/10">
+    <Card className="group hover:shadow-lg transition-all duration-300 border-primary/10" id={qrCode.id.toString()}>
       <CardContent className="p-4">
         <div className="flex flex-col items-center space-y-3">
+          <div className="w-full flex justify-end mb-2">
+            <Button variant="ghost" size="icon" className="cursor-grab active:cursor-grabbing">
+              <GripHorizontal className="h-4 w-4 text-muted-foreground" />
+            </Button>
+          </div>
           <div className="bg-primary/5 rounded-lg p-3">
             <canvas ref={canvasRef} />
           </div>

@@ -7,6 +7,7 @@ import { useState } from "react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { useDroppable } from "@dnd-kit/core";
 
 interface FolderListProps {
   selectedFolder: Folder | null;
@@ -29,10 +30,10 @@ export default function FolderList({ selectedFolder, onSelectFolder }: FolderLis
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/folders"] });
       setNewFolderName("");
-      toast({ title: "Folder created successfully" });
+      toast({ title: "Carpeta creada exitosamente" });
     },
     onError: (error) => {
-      toast({ title: "Failed to create folder", description: error.message, variant: "destructive" });
+      toast({ title: "Error al crear la carpeta", description: error.message, variant: "destructive" });
     },
   });
 
@@ -43,11 +44,15 @@ export default function FolderList({ selectedFolder, onSelectFolder }: FolderLis
     }
   };
 
+  const { isOver: isOverRoot, setNodeRef: setRootRef } = useDroppable({
+    id: 'root',
+  });
+
   return (
     <div className="space-y-4">
       <form onSubmit={handleCreateFolder} className="flex gap-2">
         <Input
-          placeholder="New folder name"
+          placeholder="Nombre de la carpeta"
           value={newFolderName}
           onChange={(e) => setNewFolderName(e.target.value)}
         />
@@ -57,31 +62,69 @@ export default function FolderList({ selectedFolder, onSelectFolder }: FolderLis
       </form>
 
       <div className="space-y-1">
-        <Button
-          variant="ghost"
+        <div
+          ref={setRootRef}
           className={cn(
-            "w-full justify-start",
-            !selectedFolder && "bg-accent"
+            "transition-colors",
+            isOverRoot && "bg-primary/10 rounded-lg"
           )}
-          onClick={() => onSelectFolder(null)}
         >
-          All QR Codes
-        </Button>
-        
-        {folders?.map((folder) => (
           <Button
-            key={folder.id}
             variant="ghost"
             className={cn(
               "w-full justify-start",
-              selectedFolder?.id === folder.id && "bg-accent"
+              !selectedFolder && "bg-accent"
             )}
-            onClick={() => onSelectFolder(folder)}
+            onClick={() => onSelectFolder(null)}
           >
-            {folder.name}
+            Todos los QR Codes
           </Button>
+        </div>
+
+        {folders?.map((folder) => (
+          <FolderItem 
+            key={folder.id} 
+            folder={folder} 
+            isSelected={selectedFolder?.id === folder.id}
+            onSelect={() => onSelectFolder(folder)}
+          />
         ))}
       </div>
+    </div>
+  );
+}
+
+function FolderItem({ 
+  folder, 
+  isSelected, 
+  onSelect 
+}: { 
+  folder: Folder; 
+  isSelected: boolean;
+  onSelect: () => void;
+}) {
+  const { isOver, setNodeRef } = useDroppable({
+    id: folder.id,
+  });
+
+  return (
+    <div
+      ref={setNodeRef}
+      className={cn(
+        "transition-colors",
+        isOver && "bg-primary/10 rounded-lg"
+      )}
+    >
+      <Button
+        variant="ghost"
+        className={cn(
+          "w-full justify-start",
+          isSelected && "bg-accent"
+        )}
+        onClick={onSelect}
+      >
+        {folder.name}
+      </Button>
     </div>
   );
 }

@@ -59,6 +59,20 @@ export function registerRoutes(app: Express): Server {
     res.json(qrCode);
   });
 
+  // Actualizar QR code
+  app.patch("/api/qrcodes/:id", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+
+    const qrId = parseInt(req.params.id);
+    const qrCode = await storage.getQRCode(qrId);
+
+    if (!qrCode) return res.sendStatus(404);
+    if (qrCode.userId !== req.user.id) return res.sendStatus(403);
+
+    const updatedQR = await storage.updateQRCode(qrId, req.body);
+    res.json(updatedQR);
+  });
+
   // Scan tracking routes
   app.get("/api/qrcodes/:id/scan", async (req, res) => {
     const qrId = parseInt(req.params.id);
