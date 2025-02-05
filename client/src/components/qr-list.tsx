@@ -5,7 +5,7 @@ import QRCode from "qrcode";
 import { useEffect, useRef } from "react";
 import { QRCode as QRCodeType } from "@shared/schema";
 import { Button } from "@/components/ui/button";
-import { BarChart3 } from "lucide-react";
+import { BarChart3, ExternalLink } from "lucide-react";
 
 interface QRListProps {
   folderId?: number;
@@ -20,9 +20,17 @@ export default function QRList({ folderId }: QRListProps) {
     ? qrCodes?.filter((qr) => qr.folderId === folderId)
     : qrCodes;
 
+  if (!filteredQRCodes?.length) {
+    return (
+      <div className="text-center py-12">
+        <p className="text-muted-foreground">No hay QR codes en esta carpeta</p>
+      </div>
+    );
+  }
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {filteredQRCodes?.map((qr) => (
+      {filteredQRCodes.map((qr) => (
         <QRCodeCard key={qr.id} qrCode={qr} />
       ))}
     </div>
@@ -78,21 +86,31 @@ function QRCodeCard({ qrCode }: { qrCode: QRCodeType }) {
   }, [qrCode]);
 
   return (
-    <Card className="hover:shadow-lg transition-shadow">
+    <Card className="group hover:shadow-lg transition-all duration-300 border-primary/10">
       <CardContent className="p-6">
-        <div className="flex justify-center mb-4">
+        <div className="flex justify-center mb-4 bg-primary/5 rounded-lg p-4">
           <canvas ref={canvasRef} />
         </div>
-        <div className="text-center mb-4">
+        <div className="text-center mb-6">
           <p className="font-medium truncate">{qrCode.content}</p>
-          <p className="text-sm text-muted-foreground">{qrCode.type}</p>
+          <p className="text-sm text-muted-foreground capitalize">{qrCode.type}</p>
         </div>
-        <Link href={`/qr/${qrCode.id}`}>
-          <Button className="w-full" variant="outline">
-            <BarChart3 className="h-4 w-4 mr-2" />
-            View Statistics
+        <div className="flex gap-2">
+          <Link href={`/qr/${qrCode.id}`} className="flex-1">
+            <Button className="w-full" variant="outline">
+              <BarChart3 className="h-4 w-4 mr-2" />
+              Ver Estadísticas
+            </Button>
+          </Link>
+          <Button 
+            variant="outline" 
+            size="icon"
+            onClick={() => window.open(qrCode.content, '_blank')}
+            className="shrink-0"
+          >
+            <ExternalLink className="h-4 w-4" />
           </Button>
-        </Link>
+        </div>
       </CardContent>
     </Card>
   );

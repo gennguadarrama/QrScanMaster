@@ -9,8 +9,15 @@ import { insertQRCodeSchema } from "@shared/schema";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { DialogTitle } from "@/components/ui/dialog";
-import { Loader2 } from "lucide-react";
+import { Loader2, Mail, Link as LinkIcon, Phone, Type } from "lucide-react";
 import { useState } from "react";
+
+const QR_TYPES = [
+  { value: 'url', label: 'URL', icon: LinkIcon },
+  { value: 'text', label: 'Texto', icon: Type },
+  { value: 'email', label: 'Email', icon: Mail },
+  { value: 'phone', label: 'Teléfono', icon: Phone },
+];
 
 export default function QRCodeForm({ onSuccess }: { onSuccess: () => void }) {
   const { toast } = useToast();
@@ -38,12 +45,16 @@ export default function QRCodeForm({ onSuccess }: { onSuccess: () => void }) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/qrcodes"] });
-      toast({ title: "QR Code created successfully" });
+      toast({ title: "QR Code creado exitosamente" });
       onSuccess();
       setPreviewLogo(null);
     },
     onError: (error) => {
-      toast({ title: "Failed to create QR Code", description: error.message, variant: "destructive" });
+      toast({ 
+        title: "Error al crear el QR Code", 
+        description: error.message, 
+        variant: "destructive" 
+      });
     },
   });
 
@@ -62,8 +73,8 @@ export default function QRCodeForm({ onSuccess }: { onSuccess: () => void }) {
         reader.readAsDataURL(file);
       } catch (error) {
         toast({ 
-          title: "Error processing logo", 
-          description: "Please try a different image file", 
+          title: "Error al procesar el logo", 
+          description: "Por favor intenta con otra imagen", 
           variant: "destructive" 
         });
         setIsProcessingLogo(false);
@@ -73,7 +84,11 @@ export default function QRCodeForm({ onSuccess }: { onSuccess: () => void }) {
 
   return (
     <div className="p-4">
-      <DialogTitle className="text-2xl font-bold mb-6">Create New QR Code</DialogTitle>
+      <DialogTitle className="text-2xl font-bold mb-2">Crear Nuevo QR Code</DialogTitle>
+      <p className="text-muted-foreground mb-6">
+        Personaliza tu QR code con contenido y un logo opcional
+      </p>
+
       <Form {...form}>
         <form onSubmit={form.handleSubmit((data) => mutation.mutate(data))} className="space-y-6">
           <FormField
@@ -81,18 +96,22 @@ export default function QRCodeForm({ onSuccess }: { onSuccess: () => void }) {
             name="type"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Type</FormLabel>
+                <FormLabel>Tipo de Contenido</FormLabel>
                 <Select onValueChange={field.onChange} defaultValue={field.value}>
                   <FormControl>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select type" />
+                      <SelectValue placeholder="Selecciona el tipo" />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="url">URL</SelectItem>
-                    <SelectItem value="text">Text</SelectItem>
-                    <SelectItem value="email">Email</SelectItem>
-                    <SelectItem value="phone">Phone</SelectItem>
+                    {QR_TYPES.map(({ value, label, icon: Icon }) => (
+                      <SelectItem key={value} value={value}>
+                        <div className="flex items-center gap-2">
+                          <Icon className="h-4 w-4" />
+                          {label}
+                        </div>
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
                 <FormMessage />
@@ -105,9 +124,9 @@ export default function QRCodeForm({ onSuccess }: { onSuccess: () => void }) {
             name="content"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Content</FormLabel>
+                <FormLabel>Contenido</FormLabel>
                 <FormControl>
-                  <Input {...field} />
+                  <Input {...field} placeholder="Ingresa el contenido para tu QR code" />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -119,11 +138,11 @@ export default function QRCodeForm({ onSuccess }: { onSuccess: () => void }) {
             name="folderId"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Folder</FormLabel>
+                <FormLabel>Carpeta (Opcional)</FormLabel>
                 <Select onValueChange={field.onChange}>
                   <FormControl>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select folder" />
+                      <SelectValue placeholder="Selecciona una carpeta" />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
@@ -140,46 +159,52 @@ export default function QRCodeForm({ onSuccess }: { onSuccess: () => void }) {
           />
 
           <FormItem>
-            <FormLabel>Logo (Optional)</FormLabel>
+            <FormLabel>Logo (Opcional)</FormLabel>
             <div className="space-y-4">
-              <FormControl>
-                <Input 
-                  type="file" 
-                  accept="image/*" 
-                  onChange={handleLogoChange}
-                  disabled={isProcessingLogo}
-                />
-              </FormControl>
+              <div className="grid grid-cols-[1fr,auto] gap-4">
+                <FormControl>
+                  <Input 
+                    type="file" 
+                    accept="image/*" 
+                    onChange={handleLogoChange}
+                    disabled={isProcessingLogo}
+                  />
+                </FormControl>
+                {previewLogo && (
+                  <div className="relative w-16 h-16 border rounded-lg overflow-hidden">
+                    <img 
+                      src={previewLogo} 
+                      alt="Logo preview" 
+                      className="w-full h-full object-contain"
+                    />
+                  </div>
+                )}
+              </div>
               {isProcessingLogo && (
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <Loader2 className="h-4 w-4 animate-spin" />
-                  Processing logo...
-                </div>
-              )}
-              {previewLogo && (
-                <div className="relative w-20 h-20">
-                  <img 
-                    src={previewLogo} 
-                    alt="Logo preview" 
-                    className="w-full h-full object-contain"
-                  />
+                  Procesando logo...
                 </div>
               )}
               <p className="text-sm text-muted-foreground">
-                The logo will be automatically converted to grayscale for better QR code compatibility
+                El logo se convertirá automáticamente a escala de grises para mejor compatibilidad
               </p>
             </div>
             <FormMessage />
           </FormItem>
 
-          <Button type="submit" className="w-full" disabled={mutation.isPending || isProcessingLogo}>
+          <Button 
+            type="submit" 
+            className="w-full bg-primary hover:bg-primary/90 text-primary-foreground" 
+            disabled={mutation.isPending || isProcessingLogo}
+          >
             {mutation.isPending ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Creating QR Code...
+                Creando QR Code...
               </>
             ) : (
-              'Create QR Code'
+              'Crear QR Code'
             )}
           </Button>
         </form>
