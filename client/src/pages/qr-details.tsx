@@ -23,16 +23,43 @@ export default function QRDetails() {
 
   useEffect(() => {
     if (qrCode?.content && canvasRef.current) {
-      QRCode.toCanvas(canvasRef.current, qrCode.content, {
+      const options: QRCode.QRCodeRenderersOptions = {
         width: 300,
         margin: 2,
-        ...(qrCode.logo ? {
-          color: {
-            dark: '#000',
-            light: '#fff'
-          }
-        } : {}),
-      }).catch(console.error);
+        color: {
+          dark: '#000',
+          light: '#fff'
+        },
+      };
+
+      // If we have a logo, add it as an image in the center of the QR code
+      if (qrCode.logo) {
+        const img = new Image();
+        img.onload = () => {
+          QRCode.toCanvas(canvasRef.current!, qrCode.content, options)
+            .then(() => {
+              const canvas = canvasRef.current!;
+              const ctx = canvas.getContext('2d')!;
+
+              // Calculate logo size (25% of QR code size)
+              const logoSize = canvas.width * 0.25;
+              const logoX = (canvas.width - logoSize) / 2;
+              const logoY = (canvas.height - logoSize) / 2;
+
+              // Create a white background for the logo
+              ctx.fillStyle = '#FFFFFF';
+              ctx.fillRect(logoX - 2, logoY - 2, logoSize + 4, logoSize + 4);
+
+              // Draw the logo
+              ctx.drawImage(img, logoX, logoY, logoSize, logoSize);
+            })
+            .catch(console.error);
+        };
+        img.src = qrCode.logo;
+      } else {
+        QRCode.toCanvas(canvasRef.current, qrCode.content, options)
+          .catch(console.error);
+      }
     }
   }, [qrCode]);
 

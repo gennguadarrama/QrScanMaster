@@ -26,10 +26,15 @@ export function registerRoutes(app: Express): Server {
 
     let logo = req.body.logo;
     if (logo) {
-      // Convert logo to grayscale
+      // Convert logo to grayscale and optimize for QR code
       const buffer = Buffer.from(logo.split(',')[1], 'base64');
       const processedBuffer = await sharp(buffer)
         .grayscale()
+        .resize(200, 200, {
+          fit: 'inside',
+          withoutEnlargement: true
+        })
+        .normalize() // Enhance contrast
         .toBuffer();
       logo = `data:image/png;base64,${processedBuffer.toString('base64')}`;
     }
