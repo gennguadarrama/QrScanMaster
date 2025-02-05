@@ -46,7 +46,7 @@ function QRCodeCard({ qrCode }: { qrCode: QRCodeType }) {
       const trackingUrl = `${window.location.origin}/api/qrcodes/${qrCode.id}/scan?content=${encodeURIComponent(qrCode.content)}`;
 
       const options: QRCode.QRCodeRenderersOptions = {
-        width: 180, // Reduced size slightly
+        width: 200,
         margin: 1,
         color: {
           dark: '#000',
@@ -87,29 +87,28 @@ function QRCodeCard({ qrCode }: { qrCode: QRCodeType }) {
 
   return (
     <Card className="group hover:shadow-lg transition-all duration-300 border-primary/10">
-      <CardContent className="p-6 flex flex-col gap-4">
-        <div className="flex justify-center bg-primary/5 rounded-lg p-4">
-          <canvas ref={canvasRef} className="max-w-full" />
-        </div>
-        <div className="text-center">
-          <p className="font-medium truncate mb-1">{qrCode.content}</p>
-          <p className="text-sm text-muted-foreground capitalize">{qrCode.type}</p>
-        </div>
-        <div className="flex gap-2 mt-auto">
-          <Link href={`/qr/${qrCode.id}`} className="flex-1">
-            <Button className="w-full" variant="outline">
-              <BarChart3 className="h-4 w-4 mr-2" />
-              Ver Estadísticas
+      <CardContent className="p-4">
+        <div className="flex flex-col items-center space-y-3">
+          <div className="bg-primary/5 rounded-lg p-3">
+            <canvas ref={canvasRef} />
+          </div>
+          <p className="text-sm font-medium truncate w-full text-center">{qrCode.content}</p>
+          <div className="flex w-full gap-2">
+            <Link href={`/qr/${qrCode.id}`} className="flex-1">
+              <Button className="w-full" variant="outline" size="sm">
+                <BarChart3 className="h-4 w-4 mr-2" />
+                Ver Estadísticas
+              </Button>
+            </Link>
+            <Button 
+              variant="outline" 
+              size="icon"
+              onClick={() => window.open(qrCode.content, '_blank')}
+              className="shrink-0"
+            >
+              <ExternalLink className="h-4 w-4" />
             </Button>
-          </Link>
-          <Button 
-            variant="outline" 
-            size="icon"
-            onClick={() => window.open(qrCode.content, '_blank')}
-            className="shrink-0"
-          >
-            <ExternalLink className="h-4 w-4" />
-          </Button>
+          </div>
         </div>
       </CardContent>
     </Card>
