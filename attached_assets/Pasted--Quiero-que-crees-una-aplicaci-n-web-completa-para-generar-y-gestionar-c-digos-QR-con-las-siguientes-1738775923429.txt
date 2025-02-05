@@ -1,0 +1,85 @@
+"Quiero que crees una aplicación web completa para generar y gestionar códigos QR con las siguientes características específicas:"
+
+1. Funcionalidades principales:
+
+Creación de códigos QR:
+Los usuarios deben poder generar códigos QR personalizados.
+Cada código QR debe permitir:
+Enlazar a una URL, texto, número de teléfono, correo electrónico o cualquier otro tipo de contenido compatible con QR.
+Insertar un logo de la empresa dentro del código QR.
+El logo debe convertirse automáticamente a escala de grises (monocromático) para asegurar compatibilidad con el diseño del QR.
+Mantener alta calidad del logo al insertarlo en el QR, asegurando que sea nítido y legible.
+Organización de códigos QR:
+Los usuarios deben poder organizar sus códigos QR en carpetas o proyectos.
+Cada carpeta/proyecto debe tener un nombre descriptivo y permitir agrupar múltiples códigos QR relacionados.
+Rastreo de interacciones:
+La aplicación debe rastrear y mostrar estadísticas sobre cómo los usuarios interactúan con cada código QR.
+Las métricas incluyen:
+Número total de escaneos.
+Fecha y hora del último escaneo.
+Ubicación geográfica aproximada (si es posible).
+Dispositivos utilizados para escanear (móvil, escritorio, etc.).
+Interfaz de usuario:
+Un panel principal donde los usuarios puedan:
+Crear nuevos códigos QR.
+Ver una lista de todos los códigos QR generados, organizados por carpetas/proyectos.
+Acceder a las estadísticas de interacción de cada código QR.
+Diseño responsivo para dispositivos móviles y escritorio.
+2. Tecnologías y herramientas requeridas:
+
+Lenguajes y frameworks:
+Usar Node.js con Express para el backend.
+Usar HTML, CSS y JavaScript (o un framework como React) para el frontend.
+Base de datos: SQLite o MongoDB para almacenar los códigos QR, carpetas/proyectos y estadísticas de interacción.
+Generación de códigos QR:
+Usar una biblioteca como qrcode para generar códigos QR.
+Integrar una biblioteca como sharp para procesar imágenes (convertir logos a escala de grises y mantener alta calidad).
+Rastreo de interacciones:
+Implementar un endpoint en el backend para registrar cada vez que un código QR es escaneado.
+Almacenar las métricas en la base de datos.
+Diseño visual:
+Usar un diseño limpio y profesional, con colores neutros y tipografía moderna.
+Incluir un botón visible en todas las páginas para regresar al panel principal.
+3. Estructura del proyecto:
+
+Frontend:
+Panel principal con opciones claras para navegar entre secciones.
+Formulario dinámico para crear códigos QR, incluyendo campos para el contenido del QR y la carga del logo.
+Interfaz intuitiva para organizar códigos QR en carpetas/proyectos.
+Página de estadísticas para cada código QR, mostrando gráficos o tablas con las métricas de interacción.
+Backend:
+Rutas API para manejar la creación, almacenamiento y recuperación de códigos QR.
+Lógica para procesar imágenes (convertir logos a escala de grises y mantener alta calidad).
+Endpoint para registrar interacciones con los códigos QR.
+Base de datos:
+Esquema para almacenar:
+Información de usuario (nombre, correo, etc.).
+Datos de los códigos QR generados (contenido, logo, carpeta/proyecto asociado).
+Estadísticas de interacción (escaneos, ubicación, dispositivo, etc.).
+4. Requisitos adicionales:
+
+Diseño responsivo:
+La interfaz debe ser compatible con dispositivos móviles y escritorio.
+Seguridad:
+Implementar autenticación básica (correo y contraseña) para proteger los datos de los usuarios.
+Encriptar contraseñas antes de almacenarlas en la base de datos.
+Optimización de imágenes:
+Asegurarse de que los logos cargados sean procesados correctamente:
+Convertir a escala de grises sin perder detalles.
+Redimensionar si es necesario para que se ajuste al diseño del QR.
+Claridad en la interfaz:
+Mostrar mensajes claros al usuario durante todo el proceso:
+"Código QR generado exitosamente."
+"Logo procesado correctamente."
+"Estadísticas actualizadas."
+5. Ejemplo de flujo de trabajo:
+
+El usuario inicia sesión en la plataforma.
+Desde el panel principal, selecciona "Crear nuevo código QR".
+El sistema muestra un formulario para recopilar:
+Contenido del QR (URL, texto, etc.).
+Opción para cargar un logo (opcional).
+Si se carga un logo, el sistema lo convierte a escala de grises y lo integra al código QR.
+El código QR generado se guarda en la base de datos y se asocia con una carpeta/proyecto.
+El usuario puede ver todos sus códigos QR en el panel principal, organizados por carpetas/proyectos.
+Al hacer clic en un código QR, el usuario puede ver las estadísticas de interacción.
