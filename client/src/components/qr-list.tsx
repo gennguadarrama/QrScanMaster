@@ -1,15 +1,16 @@
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Link } from "wouter";
-import { QRCode } from "qrcode";
+import QRCode from "qrcode";
 import { useEffect, useRef } from "react";
+import { QRCode as QRCodeType } from "@shared/schema";
 
 interface QRListProps {
   folderId?: number;
 }
 
 export default function QRList({ folderId }: QRListProps) {
-  const { data: qrCodes } = useQuery({
+  const { data: qrCodes } = useQuery<QRCodeType[]>({
     queryKey: ["/api/qrcodes"],
   });
 
@@ -26,16 +27,21 @@ export default function QRList({ folderId }: QRListProps) {
   );
 }
 
-function QRCodeCard({ qrCode }: { qrCode: any }) {
+function QRCodeCard({ qrCode }: { qrCode: QRCodeType }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
-    if (canvasRef.current) {
+    if (canvasRef.current && qrCode.content) {
       QRCode.toCanvas(canvasRef.current, qrCode.content, {
         width: 200,
         margin: 1,
-        ...(qrCode.logo ? { logo: qrCode.logo } : {}),
-      });
+        ...(qrCode.logo ? { 
+          color: {
+            dark: '#000',
+            light: '#fff'
+          }
+        } : {}),
+      }).catch(console.error);
     }
   }, [qrCode]);
 

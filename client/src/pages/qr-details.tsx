@@ -5,28 +5,34 @@ import { Card } from "@/components/ui/card";
 import { ArrowLeft } from "lucide-react";
 import { Link } from "wouter";
 import AnalyticsCard from "@/components/analytics-card";
-import { QRCode } from "qrcode";
+import QRCode from "qrcode";
 import { useEffect, useRef } from "react";
+import { QRCode as QRCodeType, Scan } from "@shared/schema";
 
 export default function QRDetails() {
   const { id } = useParams();
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
-  const { data: qrCode } = useQuery({
+  const { data: qrCode } = useQuery<QRCodeType>({
     queryKey: [`/api/qrcodes/${id}`],
   });
 
-  const { data: scans } = useQuery({
+  const { data: scans } = useQuery<Scan[]>({
     queryKey: [`/api/qrcodes/${id}/scans`],
   });
 
   useEffect(() => {
-    if (qrCode && canvasRef.current) {
+    if (qrCode?.content && canvasRef.current) {
       QRCode.toCanvas(canvasRef.current, qrCode.content, {
         width: 300,
         margin: 2,
-        ...(qrCode.logo ? { logo: qrCode.logo } : {}),
-      });
+        ...(qrCode.logo ? {
+          color: {
+            dark: '#000',
+            light: '#fff'
+          }
+        } : {}),
+      }).catch(console.error);
     }
   }, [qrCode]);
 
