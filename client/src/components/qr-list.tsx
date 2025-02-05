@@ -32,7 +32,10 @@ function QRCodeCard({ qrCode }: { qrCode: QRCodeType }) {
 
   useEffect(() => {
     if (canvasRef.current && qrCode.content) {
-      QRCode.toCanvas(canvasRef.current, qrCode.content, {
+      // Create a tracking URL that will record scans
+      const trackingUrl = `${window.location.origin}/api/qrcodes/${qrCode.id}/scan?content=${encodeURIComponent(qrCode.content)}`;
+
+      QRCode.toCanvas(canvasRef.current, trackingUrl, {
         width: 200,
         margin: 1,
         ...(qrCode.logo ? { 

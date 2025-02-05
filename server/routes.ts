@@ -23,7 +23,7 @@ export function registerRoutes(app: Express): Server {
   // QR Code routes
   app.post("/api/qrcodes", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
-    
+
     let logo = req.body.logo;
     if (logo) {
       // Convert logo to grayscale
@@ -55,13 +55,31 @@ export function registerRoutes(app: Express): Server {
   });
 
   // Scan tracking routes
-  app.post("/api/qrcodes/:id/scan", async (req, res) => {
-    const scan = await storage.recordScan(
-      parseInt(req.params.id),
-      req.body.device,
-      req.body.location
-    );
-    res.json(scan);
+  app.get("/api/qrcodes/:id/scan", async (req, res) => {
+    const qrId = parseInt(req.params.id);
+    const qrCode = await storage.getQRCode(qrId);
+    if (!qrCode) return res.sendStatus(404);
+
+    // Get device info from user agent
+    const device = req.headers['user-agent'] || 'Unknown Device';
+
+    // Get approximate location from IP
+    const forwardedFor = req.headers['x-forwarded-for'];
+    const location = forwardedFor ? `IP: ${forwardedFor}` : 'Unknown Location';
+
+    // Record the scan
+    await storage.recordScan(qrId, device, location);
+
+    // Redirect to the QR content
+    const content = req.query.content as string;
+    if (!content) return res.sendStatus(400);
+
+    // If it's a URL, redirect to it, otherwise show the content
+    if (qrCode.type === 'url' && content.startsWith('http')) {
+      res.redirect(content);
+    } else {
+      res.send(`<html><body><h1>QR Content</h1><p>${content}</p></body></html>`);
+    }
   });
 
   app.get("/api/qrcodes/:id/scans", async (req, res) => {
