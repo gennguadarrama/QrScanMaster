@@ -9,6 +9,8 @@ import { insertQRCodeSchema } from "@shared/schema";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { DialogTitle } from "@/components/ui/dialog";
+import { Loader2 } from "lucide-react";
+import { useState } from "react";
 
 export default function QRCodeForm({ onSuccess }: { onSuccess: () => void }) {
   const { toast } = useToast();
@@ -26,6 +28,9 @@ export default function QRCodeForm({ onSuccess }: { onSuccess: () => void }) {
     queryKey: ["/api/folders"],
   });
 
+  const [previewLogo, setPreviewLogo] = useState<string | null>(null);
+  const [isProcessingLogo, setIsProcessingLogo] = useState(false);
+
   const mutation = useMutation({
     mutationFn: async (data: FormData) => {
       const res = await apiRequest("POST", "/api/qrcodes", data);
@@ -35,6 +40,7 @@ export default function QRCodeForm({ onSuccess }: { onSuccess: () => void }) {
       queryClient.invalidateQueries({ queryKey: ["/api/qrcodes"] });
       toast({ title: "QR Code created successfully" });
       onSuccess();
+      setPreviewLogo(null);
     },
     onError: (error) => {
       toast({ title: "Failed to create QR Code", description: error.message, variant: "destructive" });
@@ -44,11 +50,24 @@ export default function QRCodeForm({ onSuccess }: { onSuccess: () => void }) {
   const handleLogoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        form.setValue("logo", reader.result as string);
-      };
-      reader.readAsDataURL(file);
+      setIsProcessingLogo(true);
+      try {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          const base64 = reader.result as string;
+          setPreviewLogo(base64);
+          form.setValue("logo", base64);
+          setIsProcessingLogo(false);
+        };
+        reader.readAsDataURL(file);
+      } catch (error) {
+        toast({ 
+          title: "Error processing logo", 
+          description: "Please try a different image file", 
+          variant: "destructive" 
+        });
+        setIsProcessingLogo(false);
+      }
     }
   };
 
@@ -121,15 +140,47 @@ export default function QRCodeForm({ onSuccess }: { onSuccess: () => void }) {
           />
 
           <FormItem>
-            <FormLabel>Logo</FormLabel>
-            <FormControl>
-              <Input type="file" accept="image/*" onChange={handleLogoChange} />
-            </FormControl>
+            <FormLabel>Logo (Optional)</FormLabel>
+            <div className="space-y-4">
+              <FormControl>
+                <Input 
+                  type="file" 
+                  accept="image/*" 
+                  onChange={handleLogoChange}
+                  disabled={isProcessingLogo}
+                />
+              </FormControl>
+              {isProcessingLogo && (
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Processing logo...
+                </div>
+              )}
+              {previewLogo && (
+                <div className="relative w-20 h-20">
+                  <img 
+                    src={previewLogo} 
+                    alt="Logo preview" 
+                    className="w-full h-full object-contain"
+                  />
+                </div>
+              )}
+              <p className="text-sm text-muted-foreground">
+                The logo will be automatically converted to grayscale for better QR code compatibility
+              </p>
+            </div>
             <FormMessage />
           </FormItem>
 
-          <Button type="submit" className="w-full" disabled={mutation.isPending}>
-            Create QR Code
+          <Button type="submit" className="w-full" disabled={mutation.isPending || isProcessingLogo}>
+            {mutation.isPending ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Creating QR Code...
+              </>
+            ) : (
+              'Create QR Code'
+            )}
           </Button>
         </form>
       </Form>

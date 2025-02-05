@@ -4,6 +4,8 @@ import { Link } from "wouter";
 import QRCode from "qrcode";
 import { useEffect, useRef } from "react";
 import { QRCode as QRCodeType } from "@shared/schema";
+import { Button } from "@/components/ui/button";
+import { BarChart3 } from "lucide-react";
 
 interface QRListProps {
   folderId?: number;
@@ -49,18 +51,22 @@ function QRCodeCard({ qrCode }: { qrCode: QRCodeType }) {
   }, [qrCode]);
 
   return (
-    <Link href={`/qr/${qrCode.id}`}>
-      <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-        <CardContent className="p-6">
-          <div className="flex justify-center mb-4">
-            <canvas ref={canvasRef} />
-          </div>
-          <div className="text-center">
-            <p className="font-medium truncate">{qrCode.content}</p>
-            <p className="text-sm text-muted-foreground">{qrCode.type}</p>
-          </div>
-        </CardContent>
-      </Card>
-    </Link>
+    <Card className="hover:shadow-lg transition-shadow">
+      <CardContent className="p-6">
+        <div className="flex justify-center mb-4">
+          <canvas ref={canvasRef} />
+        </div>
+        <div className="text-center mb-4">
+          <p className="font-medium truncate">{qrCode.content}</p>
+          <p className="text-sm text-muted-foreground">{qrCode.type}</p>
+        </div>
+        <Link href={`/qr/${qrCode.id}`}>
+          <Button className="w-full" variant="outline">
+            <BarChart3 className="h-4 w-4 mr-2" />
+            View Statistics
+          </Button>
+        </Link>
+      </CardContent>
+    </Card>
   );
 }
