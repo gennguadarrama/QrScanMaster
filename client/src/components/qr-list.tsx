@@ -29,7 +29,7 @@ export default function QRList({ folderId }: QRListProps) {
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
       {filteredQRCodes.map((qr) => (
         <QRCodeCard key={qr.id} qrCode={qr} />
       ))}
@@ -46,7 +46,7 @@ function QRCodeCard({ qrCode }: { qrCode: QRCodeType }) {
       const trackingUrl = `${window.location.origin}/api/qrcodes/${qrCode.id}/scan?content=${encodeURIComponent(qrCode.content)}`;
 
       const options: QRCode.QRCodeRenderersOptions = {
-        width: 200,
+        width: 180, // Reduced size slightly
         margin: 1,
         color: {
           dark: '#000',
@@ -87,15 +87,15 @@ function QRCodeCard({ qrCode }: { qrCode: QRCodeType }) {
 
   return (
     <Card className="group hover:shadow-lg transition-all duration-300 border-primary/10">
-      <CardContent className="p-6">
-        <div className="flex justify-center mb-4 bg-primary/5 rounded-lg p-4">
-          <canvas ref={canvasRef} />
+      <CardContent className="p-6 flex flex-col gap-4">
+        <div className="flex justify-center bg-primary/5 rounded-lg p-4">
+          <canvas ref={canvasRef} className="max-w-full" />
         </div>
-        <div className="text-center mb-6">
-          <p className="font-medium truncate">{qrCode.content}</p>
+        <div className="text-center">
+          <p className="font-medium truncate mb-1">{qrCode.content}</p>
           <p className="text-sm text-muted-foreground capitalize">{qrCode.type}</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 mt-auto">
           <Link href={`/qr/${qrCode.id}`} className="flex-1">
             <Button className="w-full" variant="outline">
               <BarChart3 className="h-4 w-4 mr-2" />
