@@ -8,15 +8,11 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { insertUserSchema } from "@shared/schema";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useEffect } from "react";
 
 export default function AuthPage() {
   const { user, loginMutation, registerMutation } = useAuth();
   const [, setLocation] = useLocation();
-
-  if (user) {
-    setLocation("/");
-    return null;
-  }
 
   const loginForm = useForm({
     resolver: zodResolver(insertUserSchema),
@@ -33,6 +29,16 @@ export default function AuthPage() {
       password: "",
     },
   });
+
+  useEffect(() => {
+    if (user) {
+      setLocation("/");
+    }
+  }, [user, setLocation]);
+
+  if (user) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen flex">
@@ -87,7 +93,19 @@ export default function AuthPage() {
 
               <TabsContent value="register">
                 <Form {...registerForm}>
-                  <form onSubmit={registerForm.handleSubmit((data) => registerMutation.mutate(data))} className="space-y-4">
+                  <form 
+                    onSubmit={registerForm.handleSubmit((data) => {
+                      registerMutation.mutate(data, {
+                        onSuccess: () => {
+                          registerForm.reset();
+                          // Switch to login tab after successful registration
+                          const loginTab = document.querySelector('[value="login"]') as HTMLButtonElement;
+                          if (loginTab) loginTab.click();
+                        }
+                      });
+                    })} 
+                    className="space-y-4"
+                  >
                     <FormField
                       control={registerForm.control}
                       name="username"
