@@ -7,6 +7,7 @@ import { QRCode as QRCodeType } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { BarChart3, ExternalLink, GripHorizontal } from "lucide-react";
 import { DndContext, DragEndEvent, useSensor, useSensors, PointerSensor } from '@dnd-kit/core';
+import { useDraggable } from '@dnd-kit/core';
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 
@@ -83,10 +84,17 @@ export default function QRList({ folderId }: QRListProps) {
 
 function QRCodeCard({ qrCode }: { qrCode: QRCodeType }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const { attributes, listeners, setNodeRef, transform } = useDraggable({
+    id: qrCode.id.toString(),
+  });
+
+  const style = transform ? {
+    transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
+    zIndex: 1,
+  } : undefined;
 
   useEffect(() => {
     if (canvasRef.current && qrCode.content) {
-      // Create a tracking URL that will record scans
       const trackingUrl = `${window.location.origin}/api/qrcodes/${qrCode.id}/scan?content=${encodeURIComponent(qrCode.content)}`;
 
       const options: QRCode.QRCodeRenderersOptions = {
@@ -98,7 +106,6 @@ function QRCodeCard({ qrCode }: { qrCode: QRCodeType }) {
         },
       };
 
-      // If we have a logo, add it as an image in the center of the QR code
       if (qrCode.logo) {
         const img = new Image();
         img.onload = () => {
@@ -107,16 +114,13 @@ function QRCodeCard({ qrCode }: { qrCode: QRCodeType }) {
               const canvas = canvasRef.current!;
               const ctx = canvas.getContext('2d')!;
 
-              // Calculate logo size (25% of QR code size)
               const logoSize = canvas.width * 0.25;
               const logoX = (canvas.width - logoSize) / 2;
               const logoY = (canvas.height - logoSize) / 2;
 
-              // Create a white background for the logo
               ctx.fillStyle = '#FFFFFF';
               ctx.fillRect(logoX - 2, logoY - 2, logoSize + 4, logoSize + 4);
 
-              // Draw the logo
               ctx.drawImage(img, logoX, logoY, logoSize, logoSize);
             })
             .catch(console.error);
@@ -130,36 +134,44 @@ function QRCodeCard({ qrCode }: { qrCode: QRCodeType }) {
   }, [qrCode]);
 
   return (
-    <Card className="group hover:shadow-lg transition-all duration-300 border-primary/10" id={qrCode.id.toString()}>
-      <CardContent className="p-4">
-        <div className="flex flex-col items-center space-y-3">
-          <div className="w-full flex justify-end mb-2">
-            <Button variant="ghost" size="icon" className="cursor-grab active:cursor-grabbing">
-              <GripHorizontal className="h-4 w-4 text-muted-foreground" />
-            </Button>
-          </div>
-          <div className="bg-primary/5 rounded-lg p-3">
-            <canvas ref={canvasRef} />
-          </div>
-          <p className="text-sm font-medium truncate w-full text-center">{qrCode.content}</p>
-          <div className="flex w-full gap-2">
-            <Link href={`/qr/${qrCode.id}`} className="flex-1">
-              <Button className="w-full" variant="outline" size="sm">
-                <BarChart3 className="h-4 w-4 mr-2" />
-                Ver Estadísticas
+    <div ref={setNodeRef} style={style}>
+      <Card className="group hover:shadow-lg transition-all duration-300 border-primary/10" id={qrCode.id.toString()}>
+        <CardContent className="p-4">
+          <div className="flex flex-col items-center space-y-3">
+            <div className="w-full flex justify-end mb-2">
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="cursor-grab active:cursor-grabbing touch-none"
+                {...attributes}
+                {...listeners}
+              >
+                <GripHorizontal className="h-4 w-4 text-muted-foreground" />
               </Button>
-            </Link>
-            <Button 
-              variant="outline" 
-              size="icon"
-              onClick={() => window.open(qrCode.content, '_blank')}
-              className="shrink-0"
-            >
-              <ExternalLink className="h-4 w-4" />
-            </Button>
+            </div>
+            <div className="bg-primary/5 rounded-lg p-3">
+              <canvas ref={canvasRef} />
+            </div>
+            <p className="text-sm font-medium truncate w-full text-center">{qrCode.content}</p>
+            <div className="flex w-full gap-2">
+              <Link href={`/qr/${qrCode.id}`} className="flex-1">
+                <Button className="w-full" variant="outline" size="sm">
+                  <BarChart3 className="h-4 w-4 mr-2" />
+                  Ver Estadísticas
+                </Button>
+              </Link>
+              <Button 
+                variant="outline" 
+                size="icon"
+                onClick={() => window.open(qrCode.content, '_blank')}
+                className="shrink-0"
+              >
+                <ExternalLink className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
-        </div>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+    </div>
   );
 }
