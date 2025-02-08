@@ -10,6 +10,7 @@ import { DndContext, DragEndEvent, useSensor, useSensors, PointerSensor } from '
 import { useDraggable } from '@dnd-kit/core';
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import { cn } from "@/lib/utils";
 
 interface QRListProps {
   folderId?: number;
@@ -84,7 +85,7 @@ export default function QRList({ folderId }: QRListProps) {
 
 function QRCodeCard({ qrCode }: { qrCode: QRCodeType }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const { attributes, listeners, setNodeRef, transform } = useDraggable({
+  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: qrCode.id.toString(),
   });
 
@@ -135,19 +136,19 @@ function QRCodeCard({ qrCode }: { qrCode: QRCodeType }) {
 
   return (
     <div ref={setNodeRef} style={style}>
-      <Card className="group hover:shadow-lg transition-all duration-300 border-primary/10" id={qrCode.id.toString()}>
+      <Card 
+        className={cn(
+          "group transition-all duration-300 border-primary/10",
+          "hover:shadow-lg touch-none cursor-grab active:cursor-grabbing",
+          isDragging && "shadow-2xl rotate-2 scale-105"
+        )}
+        {...attributes}
+        {...listeners}
+      >
         <CardContent className="p-4">
           <div className="flex flex-col items-center space-y-3">
             <div className="w-full flex justify-end mb-2">
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                className="cursor-grab active:cursor-grabbing touch-none"
-                {...attributes}
-                {...listeners}
-              >
-                <GripHorizontal className="h-4 w-4 text-muted-foreground" />
-              </Button>
+              <GripHorizontal className="h-4 w-4 text-muted-foreground" />
             </div>
             <div className="bg-primary/5 rounded-lg p-3">
               <canvas ref={canvasRef} />

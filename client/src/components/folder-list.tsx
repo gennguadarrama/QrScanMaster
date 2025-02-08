@@ -33,7 +33,11 @@ export default function FolderList({ selectedFolder, onSelectFolder }: FolderLis
       toast({ title: "Carpeta creada exitosamente" });
     },
     onError: (error) => {
-      toast({ title: "Error al crear la carpeta", description: error.message, variant: "destructive" });
+      toast({ 
+        title: "Error al crear la carpeta", 
+        description: error.message,
+        variant: "destructive" 
+      });
     },
   });
 
@@ -65,16 +69,14 @@ export default function FolderList({ selectedFolder, onSelectFolder }: FolderLis
         <div
           ref={setRootRef}
           className={cn(
-            "transition-colors",
-            isOverRoot && "bg-primary/10 rounded-lg"
+            "transition-colors rounded-lg",
+            isOverRoot && "ring-2 ring-primary ring-offset-2 bg-primary/10",
+            !selectedFolder && "bg-accent/50"
           )}
         >
           <Button
             variant="ghost"
-            className={cn(
-              "w-full justify-start",
-              !selectedFolder && "bg-accent"
-            )}
+            className="w-full justify-start"
             onClick={() => onSelectFolder(null)}
           >
             Todos los QR Codes
@@ -111,16 +113,14 @@ function FolderItem({
     <div
       ref={setNodeRef}
       className={cn(
-        "transition-colors",
-        isOver && "bg-primary/10 rounded-lg"
+        "transition-all duration-200 rounded-lg",
+        isOver && "ring-2 ring-primary ring-offset-2 bg-primary/10",
+        isSelected && "bg-accent/50"
       )}
     >
       <Button
         variant="ghost"
-        className={cn(
-          "w-full justify-start",
-          isSelected && "bg-accent"
-        )}
+        className="w-full justify-start"
         onClick={onSelect}
       >
         {folder.name}
