@@ -40,6 +40,10 @@ export default function QRCodeForm({ onSuccess }: { onSuccess: () => void }) {
 
   const mutation = useMutation({
     mutationFn: async (data: FormData) => {
+      // Convert folderId to number if present
+      if (data.folderId) {
+        data.folderId = parseInt(data.folderId as string);
+      }
       const res = await apiRequest("POST", "/api/qrcodes", data);
       return await res.json();
     },
@@ -48,6 +52,7 @@ export default function QRCodeForm({ onSuccess }: { onSuccess: () => void }) {
       toast({ title: "QR Code creado exitosamente" });
       onSuccess();
       setPreviewLogo(null);
+      form.reset();
     },
     onError: (error) => {
       toast({ 

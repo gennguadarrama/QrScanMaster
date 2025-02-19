@@ -5,12 +5,13 @@ import QRCode from "qrcode";
 import { useEffect, useRef } from "react";
 import { QRCode as QRCodeType } from "@shared/schema";
 import { Button } from "@/components/ui/button";
-import { BarChart3, ExternalLink, GripHorizontal } from "lucide-react";
+import { BarChart3, ExternalLink, GripHorizontal, Download } from "lucide-react";
 import { DndContext, DragEndEvent, useSensor, useSensors, PointerSensor } from '@dnd-kit/core';
 import { useDraggable } from '@dnd-kit/core';
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { cn } from "@/lib/utils";
+import { jsPDF } from "jspdf";
 
 interface QRListProps {
   folderId?: number;
@@ -94,6 +95,37 @@ function QRCodeCard({ qrCode }: { qrCode: QRCodeType }) {
     zIndex: 1,
   } : undefined;
 
+  const handleDownloadPDF = () => {
+    if (!canvasRef.current) return;
+
+    const canvas = canvasRef.current;
+    const pdf = new jsPDF({
+      orientation: "portrait",
+      unit: "mm",
+      format: "a4",
+    });
+
+    // Add title
+    pdf.setFontSize(16);
+    pdf.text("QR Code", 105, 20, { align: "center" });
+
+    // Add content description
+    pdf.setFontSize(12);
+    pdf.text(`Contenido: ${qrCode.content}`, 20, 40);
+    pdf.text(`Tipo: ${qrCode.type}`, 20, 50);
+
+    // Add QR code image
+    const imgData = canvas.toDataURL("image/png");
+    const imgWidth = 100;
+    const imgHeight = 100;
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const x = (pageWidth - imgWidth) / 2;
+    pdf.addImage(imgData, "PNG", x, 70, imgWidth, imgHeight);
+
+    // Download the PDF
+    pdf.save(`qr-code-${qrCode.id}.pdf`);
+  };
+
   useEffect(() => {
     if (canvasRef.current && qrCode.content) {
       const trackingUrl = `${window.location.origin}/api/qrcodes/${qrCode.id}/scan?content=${encodeURIComponent(qrCode.content)}`;
@@ -168,6 +200,14 @@ function QRCodeCard({ qrCode }: { qrCode: QRCodeType }) {
                 className="shrink-0"
               >
                 <ExternalLink className="h-4 w-4" />
+              </Button>
+              <Button 
+                variant="outline" 
+                size="icon"
+                onClick={handleDownloadPDF}
+                className="shrink-0"
+              >
+                <Download className="h-4 w-4" />
               </Button>
             </div>
           </div>
