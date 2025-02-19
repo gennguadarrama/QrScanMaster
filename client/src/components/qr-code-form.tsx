@@ -11,6 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { DialogTitle } from "@/components/ui/dialog";
 import { Loader2, Mail, Link as LinkIcon, Phone, Type } from "lucide-react";
 import { useState } from "react";
+import { z } from "zod";
 
 const QR_TYPES = [
   { value: 'url', label: 'URL', icon: LinkIcon },
@@ -19,10 +20,17 @@ const QR_TYPES = [
   { value: 'phone', label: 'Teléfono', icon: Phone },
 ];
 
+// Extend the schema to handle the folder ID as a string that will be converted to number
+const formSchema = insertQRCodeSchema.extend({
+  folderId: z.string().optional().transform(val => val ? parseInt(val) : undefined),
+});
+
+type FormData = z.infer<typeof formSchema>;
+
 export default function QRCodeForm({ onSuccess }: { onSuccess: () => void }) {
   const { toast } = useToast();
-  const form = useForm({
-    resolver: zodResolver(insertQRCodeSchema),
+  const form = useForm<FormData>({
+    resolver: zodResolver(formSchema),
     defaultValues: {
       content: "",
       type: "url",
@@ -40,10 +48,6 @@ export default function QRCodeForm({ onSuccess }: { onSuccess: () => void }) {
 
   const mutation = useMutation({
     mutationFn: async (data: FormData) => {
-      // Convert folderId to number if present
-      if (data.folderId) {
-        data.folderId = parseInt(data.folderId as string);
-      }
       const res = await apiRequest("POST", "/api/qrcodes", data);
       return await res.json();
     },
